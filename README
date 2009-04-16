@@ -1,0 +1,102 @@
+= Html Test
+A plugin for HTML validation and link checking in Rails
+functional and integration tests. In addition you can run
+the HTML and link tests against a production or staging server over HTTP.
+
+== Installation
+  ruby script/plugin install http://htmltest.googlecode.com/svn/trunk/html_test
+
+== Usage
+- Add validation to your controller or integration tests:
+
+  get :some_action
+  assert_response :success
+  # The following validates using all three validators: tidy, w3c, xmllint
+  # To use a specific validator, use one of assert_tidy, assert_w3c, and
+  # assert_xmllint.
+  assert_validates 
+
+- Validate all requests in your controller and integration tests by
+  adding these lines to your RAILS_ROOT/test/test_helper.rb file:
+
+  ApplicationController.validate_all = true
+  ApplicationController.validators = [:tidy, :w3c]
+
+- Check for broken URLs (URLs that don't resolve to a route, a controller, and an action)
+  in your links, images, forms, and redirects. Works both in your controller and integration
+  tests. Add these lines to your RAILS_ROOT/test/test_helper.rb file:
+  
+  ApplicationController.check_urls = true
+  ApplicationController.check_redirects = true
+
+- Follow links in your controller or integration tests:
+
+    include Html::Test::UrlSelector
+
+    def clicks_around
+      page_url = request.request_uri
+      anchor_urls.reject { |url| external_http?(url) || skip_url?(url) || url == page_url }.
+        reject { |url| url =~ /(logout|signout)/ }.uniq.each do |url|
+
+        get url
+        assert(@response.redirect? || @response.success?,
+          "Invalid response code #{@response.response_code} for url #{url}")
+      end
+    end
+
+- Use the link validator to validate your staging or production server over HTTP:
+
+./vendor/plugins/html_test/script/validate http://my.blog.com --validators tidy,xmllint
+
+- Configuration options for your tests
+
+Here is a list of configuration options to use in test/test_helper.rb:
+
+  # # Validates all controller and integration test requests if set to true:
+  # ApplicationController.validate_all = true # Default: false.
+  # ApplicationController.validators = [:tidy, :w3c, :xmllint] # Default: [:tidy]. Which validators to use.
+  # # A list of regular expressions for Tidy warnings to ignore:
+  # Html::Test::Validator.tidy_ignore_list = [/<table> lacks "summary" attribute/] # Default: [].
+  # # Set the URL of a locally installed W3C validator here:
+  # Html::Test::Validator.w3c_url = "http://localhost/validator/htdocs/check" # Default: "http://validator.w3.org/check"
+  # Html::Test::Validator.w3c_show_source = "0" # Default: "1". Whether to list HTML document in the W3C report
+  # ApplicationController.check_urls = true # Default: false. Whether to check URLs in all links
+  # ApplicationController.check_redirects = true # Default: false. Whether to check URLs in all redirects
+
+== Validators and Dependencies
+To use Tidy for HTML validation you need the rails_tidy plugin.
+The xmllint validation option requires xmllint to
+be available on the command line. The xmllint validator is part of
+libxml2. The W3C validator has no dependencies since we access it via
+the web. To install the W3C validator locally (highly recommended), see
+those instructions:
+
+  http://validator.w3.org/docs/install.html
+
+I recommend using both the tidy and W3C validators (or xmllint if for some reason you can't use
+the W3C validator). Tidy gives useful warnings for example about empty tags,
+but it misses obvious validation failures such as lack of HTML
+quoting or unclosed tags. The W3C validator offers much better reports for debugging than
+xmllint. The last generated W3C report will be available at /tmp/w3c_last_response.html
+so that you can bring it up in your browser for debugging.
+
+The xmllint validator will use the XHTML 1.0 strict DTD by default. To specify a different DTD,
+have the Html::Test::Validator.dtd(document) method return the path to your DTD file. If you 
+prefer to use the DTD referenced in the DOCTYPE declaration (can be very slow) then have the dtd
+method return the string "doctype".
+
+If you are using a catch-all route for 404:s, then you need to implement the method
+Html::Test::UrlChecker#check_not_404(url, params) and throw an exception if that route is invoked.
+
+There are methods such as skip_url?(url) and should_validate? that you can override to control
+which pages get validated and which URLs get checked.
+
+== Tests
+If you make changes to this plugin, remember to run the tests with rake. The tests
+require the rails_tidy and mocha plugins as well as xmllint.
+
+== Author
+Peter Marklund (http://marklunds.com)
+
+== License
+Licensed under the same terms as Ruby on Rails.

@@ -1,0 +1,47 @@
+#!/usr/bin/env ruby
+# == Synopsis
+# This script validates an HTML page via HTTP and checks for broken
+# links and images. Links are followed one step away from the start page.
+# HTML validation is also done for pages linked internally from the start page
+# (i.e. relative URLs).
+#
+# == Usage
+# vendor/plugins/html_test/script/validate http://my.url.com [options]
+#
+# Options:
+#
+# --no-follow::                 Don't follow any anchor or images URLs on
+#                               the start page (i.e. only one page is requested).
+#
+# --validators validator_list:: A comma separated list of validators to use
+#                               for HTML validation. Supported validators:
+#                               tidy, xmllint, w3c. Default validator is
+#                               tidy if it is installed, otherwise w3c.
+#
+# --dtd dtd_path::              Path to the DTD file to use for xmllint
+#                               validation. By default xmllint will use
+#                               the XHTML 1.0 strict DTD. Set dtd_path
+#                               to "doctype" to make xmllint use the
+#                               DTD specified in the DOCTYPE tag
+#                               (can be slow).
+#
+# --skip skip_patterns::        A comma separated list of regexp patterns for
+#                               URLs to not visit. Using the pattern '.*'
+#                               is equivalent to the --no-follow option.
+#
+# --only only_pattern::         Only visit URLs matching given regexp pattern
+#
+# --no-external::               Do not visit external URLs, i.e. URLs with
+#                               different domain than the start page.
+#
+# --quiet::                     Don't output anything unless there is a failure.
+
+require 'optparse'
+require 'rdoc/usage'
+require 'uri'
+
+require File.join(File.dirname(__FILE__), "..", "..", "..", "..", "test", "test_helper")
+require File.join(File.dirname(__FILE__), "..", "lib", "html_test")
+
+options = Html::Test::LinkValidator.parse_command_line(ARGV) rescue RDoc::usage
+Html::Test::LinkValidator.new(ARGV[0], options)
