@@ -4,7 +4,7 @@ functional and integration tests. In addition you can run
 the HTML and link tests against a production or staging server over HTTP.
 
 == Installation
-  ruby script/plugin install http://htmltest.googlecode.com/svn/trunk/html_test
+  ruby script/plugin install git://github.com/peter/html_test.git
 
 == Usage
 - Add validation to your controller or integration tests:
