@@ -32,7 +32,7 @@ module Html
         end
       end
 
-      protected
+      private
       def urls_to_check
         anchor_urls + image_urls + form_urls
       end
@@ -69,13 +69,16 @@ module Html
         url =~ /\#/ ? url[/^(.+?)\#/, 1] : url
       end
 
+      # Each URL is required to have at least one HTTP method for which there is a route with an action
       def check_action_exists(url)
-        route = route_from_url(url)
+        unless routes_from_url(url).any? { |route| route_has_action?(route) }
+          raise_invalid_url(url, "No action or template")
+        end
+      end
+
+      def route_has_action?(route)
         controller = "#{route[:controller].camelize}Controller".constantize
-        if !controller.public_instance_methods.include?(route[:action]) &&
-          !template_file_exists?(route, controller)
-          raise Html::Test::InvalidUrl.new("No action or template for url '#{url}' body=#{response.body}")
-        end      
+        controller.public_instance_methods.include?(route[:action]) || template_file_exists?(route, controller)        
       end
 
       def template_file_exists?(route, controller)
@@ -100,20 +103,20 @@ module Html
         # This method is unimplemented by default
       end
 
-      def route_from_url(url)
-        [:get, :post, :put, :delete].each do |method|
+      def routes_from_url(url)
+        routes = [:get, :post, :put, :delete].map do |method|
           begin
             # Need to specify the method here for RESTful resource routes to work, i.e.
             # for /posts/1 to be recognized as the show action etc.
             params = ::ActionController::Routing::Routes.recognize_path(url, {:method => method})
             check_not_404(url, params)
-            return params
+            params
           rescue
-            # Could not find a route with that method, let's try the next method in the list.
-            # Some routes may have stuff like :conditions => {:method => :post}
+            # Could not find a route with that method
+            nil
           end
-        end
-        raise Html::Test::InvalidUrl.new("Cannot find a route for url '#{url}'")
+        end.compact
+        routes.present? ? routes : raise_invalid_url(url, "Cannot find a route")
       end
 
       def url_from_params(options = params)
@@ -125,6 +128,10 @@ module Html
       # Convert all keys in the hash to symbols. Not sure why this is needed.
       def symbolize_hash(hash)
         hash.keys.inject({}) { |h, k| h[k.to_sym] = hash[k]; h }
+      end
+      
+      def raise_invalid_url(url, message)
+        raise(Html::Test::InvalidUrl.new("#{message} for url '#{url}' request_uri='#{request.request_uri}' body='#{response.body}'"))
       end
     end
   end
