@@ -19,16 +19,10 @@ module Html
         end
       end
 
-      def check_redirects_resolve
-        if response.status =~ /302/
-          if response.redirected_to.is_a?(Hash)
-            # redirected_to={:action=>"foobar"}
-            url = url_from_params(response.redirected_to)
-          else
-            # redirected_to="http://test.host/foobar"
-            url = response.redirected_to[%r{#{Regexp.escape(request.host)}(.+)$}, 1]
-          end
-          check_url_resolves(url)
+      def check_redirects_resolve        
+        redirect_url = response.headers['Location']
+        if response.status =~ /302/ && redirect_url.present?
+          check_url_resolves(redirect_url)
         end
       end
 
@@ -38,10 +32,14 @@ module Html
       end
 
       def check_url_resolves(url)
-        return if url.blank? or skip_url?(url) or external_http?(url)
+        return if skip_url?(url, root_url) || external_http?(url, root_url)
         url = strip_anchor(remove_query(make_absolute(url)))
         return if public_file_exists?(url)
         check_action_exists(url)
+      end
+
+      def root_url
+        request.protocol + request.host_with_port
       end
 
       def public_file_exists?(url)
@@ -53,12 +51,18 @@ module Html
         File.join(RAILS_ROOT, "public")
       end
 
-      # Make relative URLs absolute, i.e. relative to the site root
+      # Make URLs absolute paths, i.e. relative to the site root
       def make_absolute(url)
+        url = remove_host(url) if has_protocol?(url)
         return url if url =~ %r{^/}
         current_url = request.request_uri || url_from_params
         current_url = File.dirname(current_url) if current_url !~ %r{/$}
         url = File.join(current_url, url) 
+      end
+
+      def remove_host(url)
+        url_no_host = url[%r{^[a-z]+://[^/]+(/.+)$}, 1]
+        url_no_host.blank? ? "/" : url_no_host
       end
 
       def remove_query(url)

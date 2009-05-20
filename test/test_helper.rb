@@ -30,6 +30,14 @@ class TestController < ActionController::Base
     redirect_to :action => 'valid'
   end
 
+  def redirect_external
+    redirect_to "http://google.com/foobar"
+  end
+
+  def redirect_valid_with_host
+    redirect_to "http://test.host/test/valid"
+  end
+
   def image_file_exists
     render :text => %Q{<img src="/image.jpg?23049829034"/>}
   end

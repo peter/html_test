@@ -82,6 +82,16 @@ class Html::Test::ControllerTest < ActionController::TestCase
     assert_response :redirect
   end
 
+  def test_redirect_external
+    get :redirect_external
+    assert_response :redirect
+  end
+
+  def test_redirect_valid_with_host
+    get :redirect_valid_with_host
+    assert_response :redirect    
+  end
+
   def test_image_file_exists
     get :image_file_exists
     assert_response :success
