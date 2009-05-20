@@ -20,13 +20,13 @@ module Html
       end
 
       def check_redirects_resolve
-        if response.headers['Status'] =~ /302/
+        if response.status =~ /302/
           if response.redirected_to.is_a?(Hash)
             # redirected_to={:action=>"foobar"}
             url = url_from_params(response.redirected_to)
           else
             # redirected_to="http://test.host/foobar"
-            url = response.redirected_to[%r{test.host(.+)$}, 1]
+            url = response.redirected_to[%r{#{Regexp.escape(request.host)}(.+)$}, 1]
           end
           check_url_resolves(url)
         end

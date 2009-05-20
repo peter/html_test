@@ -14,15 +14,33 @@ module Html
       end
 
       def validate_page
-        return if !should_validate?
+        url = request.request_uri
+        return if (!should_validate? || ValidateFilter.already_validated?(url))
+        log "validating #{url}"
         assert_validates(validators, response.body.strip)        
+        ValidateFilter.mark_url_validated(url)
+      end
+
+      def self.already_validated?(url)
+        validated_urls[url]
+      end
+
+      def self.mark_url_validated(url)
+        validated_urls[url] = true        
+      end
+
+      def self.validated_urls
+        @validated_urls ||= {}
       end
 
       # Override this method if you only want to validate a subset of pages
       def should_validate?
-        response.headers['Status'] =~ /200/ and
-        (response.headers['Content-Type'] =~ /text\/html/i or
-        response.body =~ /<html/)
+        response.status =~ /200/ &&
+          (response.headers['Content-Type'] =~ /text\/html/i || response.body =~ /<html/)
+      end
+      
+      def log(message)
+        puts message
       end
     end
   end

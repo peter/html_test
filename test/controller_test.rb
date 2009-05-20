@@ -5,12 +5,12 @@ ActionController::Routing::Routes.draw do |map|
   map.connect 'test/:action', :controller => 'test'
 end
 
-class Html::Test::ControllerTest < Test::Unit::TestCase
+class Html::Test::ControllerTest < ActionController::TestCase
   def setup
     @controller = TestController.new
     @request    = ActionController::TestRequest.new
     @response   = ActionController::TestResponse.new
-
+    
     ActionController::Base.validate_all = false
     ActionController::Base.check_urls = true
     ActionController::Base.check_redirects = true

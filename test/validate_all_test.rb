@@ -1,7 +1,7 @@
 require File.join(File.dirname(__FILE__), "..", "..", "..", "..", "test", "test_helper")
 require File.join(File.dirname(__FILE__), "test_helper")
 
-class Html::Test::ValidateAllTest < Test::Unit::TestCase
+class Html::Test::ValidateAllTest < ActionController::TestCase
   def setup
     @controller = TestController.new
     @request    = ActionController::TestRequest.new
