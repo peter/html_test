@@ -41,13 +41,13 @@ module Html
       def self.w3c_errors(body)
         response = Net::HTTP.post_form(URI.parse(w3c_url),
                               {'ss'=>w3c_show_source, 'fragment'=>body})
-        error = response['x-w3c-validator-status'] == 'Valid' ? nil : response.body
-        if error
+        status = response['x-w3c-validator-status']
+        if status != 'Valid'
           # Reference in the stylesheets
-          error.sub!(%r{@import "./base.css"}, %Q{@import "#{File.dirname(w3c_url)}/base.css"})
+          response.body.sub!(%r{@import "./base.css"}, %Q{@import "#{File.dirname(w3c_url)}/base.css"})
           response_file = File.join(tmp_dir, "w3c_last_response.html")
-          open(response_file, "w") { |f| f.puts(error) }
-          "Response from W3C was written to the file #{response_file}: " + error
+          open(response_file, "w") { |f| f.puts(response.body) }
+          "W3C status #{status}. Response from W3C was written to the file #{response_file}"
         else
           nil
         end

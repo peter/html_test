@@ -13,18 +13,31 @@ module Html
         assert_validates(:xmllint, body)
       end
 
-      def assert_validates(types = nil, body = nil)
+      def assert_validates(types = nil, body = nil, url = nil, options = {})
         body ||= @response.body
         types ||= [:tidy, :w3c, :xmllint]
         types = [types] if !types.is_a?(Array)
         types.each do |t|
+          log("validating #{url} with #{t} ... ") if options[:verbose]
           error = Html::Test::Validator.send("#{t}_errors", body)
-          assert(error.nil?, "Validator #{t} failed with message " +
-            "'#{error}' for response body:\n #{with_line_counts(body)}")
+          if error.nil?
+            log("OK\n") if options[:verbose]
+          else
+            log("FAILURE\n") if options[:verbose]
+            assert_message = "Validator #{t} failed"
+            assert_message << " for url #{url}" if url
+            assert_message << " with message '#{error}'"
+            Rails.logger.error(assert_message + " for response body:\n #{with_line_counts(body)}")
+            assert(error.nil?, assert_message)
+          end
         end
       end
       
       private
+      def log(message)
+        print(message)
+      end
+      
       def with_line_counts(body)
         separator = ("-" * 40) + $/
         body_counts = separator.dup
