@@ -73,6 +73,10 @@ those instructions:
 
   http://validator.w3.org/docs/install.html
 
+On Mac OSX I currently use the following easy to install W3C validator:
+
+  http://habilis.net/validator-sac
+
 I recommend using both the tidy and W3C validators (or xmllint if for some reason you can't use
 the W3C validator). Tidy gives useful warnings for example about empty tags,
 but it misses obvious validation failures such as lack of HTML
