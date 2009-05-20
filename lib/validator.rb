@@ -45,7 +45,7 @@ module Html
         if error
           # Reference in the stylesheets
           error.sub!(%r{@import "./base.css"}, %Q{@import "#{File.dirname(w3c_url)}/base.css"})
-          response_file = File.join(Dir::tmpdir, "w3c_last_response.html")
+          response_file = File.join(tmp_dir, "w3c_last_response.html")
           open(response_file, "w") { |f| f.puts(error) }
           "Response from W3C was written to the file #{response_file}: " + error
         else
@@ -73,7 +73,7 @@ module Html
         if status == 0
           return nil
         else
-          failure_doc = File.join(Dir::tmpdir, "xmllint_last_response.html")
+          failure_doc = File.join(tmp_dir, "xmllint_last_response.html")
           FileUtils.cp doc_file, failure_doc
           return ("command='#{command}'. HTML document at '#{failure_doc}'. " +
             IO.read(error_file))
@@ -86,6 +86,10 @@ module Html
         tmp_file.puts(contents)
         tmp_file.close
         tmp_file.path
+      end
+      
+      def self.tmp_dir
+        Dir::tmpdir
       end
     end
   end
