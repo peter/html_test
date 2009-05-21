@@ -45,7 +45,7 @@ module Html
         if status != 'Valid'
           # Reference in the stylesheets
           response.body.sub!(%r{@import "./base.css"}, %Q{@import "#{File.dirname(w3c_url)}/base.css"})
-          response_file = File.join(tmp_dir, "w3c_last_response.html")
+          response_file = find_unique_path(File.join(tmp_dir, "w3c_response.html"))
           open(response_file, "w") { |f| f.puts(response.body) }
           "W3C status #{status}. Response from W3C was written to the file #{response_file}"
         else
@@ -81,6 +81,20 @@ module Html
       end
       
       private
+      def self.find_unique_path(path)
+        filename = File.basename(path)
+        ext = File.extname(filename)
+        size_no_ext = filename.size - ext.size
+        filename_no_ext = filename[0, size_no_ext]
+        counter = 2
+        while File.exists?(path)
+          new_filename = [filename_no_ext, "-", counter, ext].join
+          path = File.join(File.dirname(path), new_filename)
+          counter += 1
+        end
+        path
+      end
+      
       def self.create_tmp_file(name, contents = "")
         tmp_file = Tempfile.new(name)
         tmp_file.puts(contents)
