@@ -81,8 +81,7 @@ I recommend using both the tidy and W3C validators (or xmllint if for some reaso
 the W3C validator). Tidy gives useful warnings for example about empty tags,
 but it misses obvious validation failures such as lack of HTML
 quoting or unclosed tags. The W3C validator offers much better reports for debugging than
-xmllint. The last generated W3C report will be available at /tmp/w3c_last_response.html
-so that you can bring it up in your browser for debugging.
+xmllint. The W3C HTML reports are written to disk so you can bring it up in your browser for debugging.
 
 The xmllint validator will use the XHTML 1.0 strict DTD by default. To specify a different DTD,
 have the Html::Test::Validator.dtd(document) method return the path to your DTD file. If you 
